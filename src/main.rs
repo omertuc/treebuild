@@ -1,5 +1,4 @@
 use nannou::prelude::*;
-use rand::Rng;
 use std::io::{self, Write};
 use std::process::Command;
 extern crate approx;
@@ -111,18 +110,24 @@ fn get_satellites(
     in_radius: f32,
     amount: usize,
     phase: f32,
+    sky: f32,
 ) -> (f32, Vec<(Point, f32)>) {
-    let diff_angle = (2.0 * PI) / (amount as f32);
+    let diff_angle = sky / (amount as f32);
 
     (
         f32::min(
             in_radius * (2.0.sqrt()) * (1.0 - diff_angle.cos()).sqrt() / 2.0,
-            root_radius * 0.7,
+            root_radius,
         ),
-        (0..amount)
-            .map(|idx| idx as f32)
-            .map(|idx| phase + idx * diff_angle)
-            .map(|angle| {
+        (0u32..(amount as u32))
+            // 0 1 2 3 5 6 7 ... to 0 1 1 2 2 3 3 ...
+            .map(|idx| ((idx as f32) / 2.0).ceil())
+            // Alternate sign
+            .map(|idx| (idx) * (-1.0).powf(idx))
+            // Get final angle for this satellite
+            .map(|alternating_idx| phase + alternating_idx * diff_angle)
+            // Get final cartesian coordinates of this satellite, also append angle
+            .map(|angle: f32| {
                 (
                     (
                         center.0 + angle.cos() * in_radius,
@@ -133,18 +138,6 @@ fn get_satellites(
             })
             .collect::<Vec<_>>(),
     )
-}
-
-#[test]
-fn check_satt() {
-    get_satellites((0.0, 0.0), 0.5, 1.0, 4, PI / 2.0)
-        .1
-        .iter()
-        .zip(&vec![(0.0, 1.0), (1.0, 0.0), (0.0, 1.0), (1.0, 0.0)])
-        .for_each(|(a, b)| {
-            abs_diff_eq!(a.0, b.0);
-            abs_diff_eq!(a.1, b.1);
-        })
 }
 
 struct DrawCrate {
@@ -163,6 +156,7 @@ fn draw_tree(
     radius: f32,
     phase: f32,
     depth: usize,
+    sky: f32,
 ) -> Vec<DrawCrate> {
     let mut result = Vec::<DrawCrate>::new();
 
@@ -172,19 +166,22 @@ fn draw_tree(
         radius: radius,
         r: 40 + ((210.0 * (1.0 - (depth as f32 / 15.0))) as u8),
         g: 100 + ((150.0 * (depth as f32 / 20.0)) as u8),
-        b: 220,
+        b: 220 - ((150.0 * (depth as f32 / 20.0)) as u8),
         name: tree.name.clone(),
     });
+
+    let child_count = tree.children.len();
 
     let (new_radius, sats) = get_satellites(
         (center.0, center.1),
         radius,
-        radius * 4.0,
-        tree.children.len(),
+        radius * 2.0,
+        child_count,
         phase,
+        sky,
     );
 
-    sats.iter()
+    sats.into_iter()
         .zip(tree.children.iter())
         .for_each(|((point, point_phase), child)| {
             result.extend(draw_tree(
@@ -193,6 +190,7 @@ fn draw_tree(
                 new_radius,
                 point_phase,
                 depth + 1,
+                sky / (child_count as f32),
             ))
         });
 
@@ -204,7 +202,7 @@ fn view(_app: &App, _model: &Model, frame: Frame) {
 
     draw.background().color(BLACK);
 
-    for draw_crate in draw_tree((0.0, 0.0), &_model.tree, 100.0, 0.0, 0) {
+    for draw_crate in draw_tree((0.0, 0.0), &_model.tree.children[1], 300.0, 1.0, 0, 2.0 * PI) {
         draw.ellipse()
             .color(srgba(draw_crate.r, draw_crate.g, draw_crate.b, 127))
             .x_y(draw_crate.x, draw_crate.y)
