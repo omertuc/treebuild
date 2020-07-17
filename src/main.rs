@@ -111,7 +111,7 @@ fn get_satellites(
     in_radius: f32,
     amount: usize,
     phase: f32,
-) -> (f32, Vec<Point>) {
+) -> (f32, Vec<(Point, f32)>) {
     let diff_angle = (2.0 * PI) / (amount as f32);
 
     (
@@ -124,8 +124,11 @@ fn get_satellites(
             .map(|idx| phase + idx * diff_angle)
             .map(|angle| {
                 (
-                    center.0 + angle.cos() * in_radius,
-                    center.1 + angle.sin() * in_radius,
+                    (
+                        center.0 + angle.cos() * in_radius,
+                        center.1 + angle.sin() * in_radius,
+                    ),
+                    angle,
                 )
             })
             .collect::<Vec<_>>(),
@@ -154,7 +157,13 @@ struct DrawCrate {
     name: String,
 }
 
-fn draw_tree(center: Point, tree: &TreeNode, radius: f32, depth: usize) -> Vec<DrawCrate> {
+fn draw_tree(
+    center: Point,
+    tree: &TreeNode,
+    radius: f32,
+    phase: f32,
+    depth: usize,
+) -> Vec<DrawCrate> {
     let mut result = Vec::<DrawCrate>::new();
 
     result.push(DrawCrate {
@@ -167,19 +176,24 @@ fn draw_tree(center: Point, tree: &TreeNode, radius: f32, depth: usize) -> Vec<D
         name: tree.name.clone(),
     });
 
-    let mut rng = rand::thread_rng();
     let (new_radius, sats) = get_satellites(
         (center.0, center.1),
         radius,
         radius * 4.0,
         tree.children.len(),
-        rng.gen_range(0.0, 2.0 * PI),
+        phase,
     );
 
     sats.iter()
         .zip(tree.children.iter())
-        .for_each(|(point, child)| {
-            result.extend(draw_tree((point.0, point.1), &child, new_radius, depth + 1))
+        .for_each(|((point, point_phase), child)| {
+            result.extend(draw_tree(
+                (point.0, point.1),
+                &child,
+                new_radius,
+                point_phase,
+                depth + 1,
+            ))
         });
 
     result
@@ -190,7 +204,7 @@ fn view(_app: &App, _model: &Model, frame: Frame) {
 
     draw.background().color(BLACK);
 
-    for draw_crate in draw_tree((0.0, 0.0), &_model.tree, 100.0, 0) {
+    for draw_crate in draw_tree((0.0, 0.0), &_model.tree, 100.0, 0.0, 0) {
         draw.ellipse()
             .color(srgba(draw_crate.r, draw_crate.g, draw_crate.b, 127))
             .x_y(draw_crate.x, draw_crate.y)
