@@ -87,7 +87,6 @@ fn model(_app: &App) -> Model {
         .expect("Cargo tree failed");
 
     println!("Cargo ran with status: {}", output.status);
-    io::stdout().write_all(&output.stdout).unwrap();
     io::stderr().write_all(&output.stderr).unwrap();
 
     assert!(output.status.success());
@@ -123,7 +122,8 @@ fn get_satellites(
             // 0 1 2 3 5 6 7 ... to 0 1 1 2 2 3 3 ...
             .map(|idx| ((idx as f32) / 2.0).ceil())
             // Alternate sign
-            .map(|idx| (idx) * (-1.0).powf(idx))
+            .zip([1, -1].iter().cycle())
+            .map(|(idx, &sign)| idx * (sign as f32))
             // Get final angle for this satellite
             .map(|alternating_idx| phase + alternating_idx * diff_angle)
             // Get final cartesian coordinates of this satellite, also append angle
@@ -175,9 +175,9 @@ fn draw_tree(
     let (new_radius, sats) = get_satellites(
         (center.0, center.1),
         radius,
-        radius * 2.0,
+        radius * {if child_count >= 3 {1.4} else {2.0}},
         child_count,
-        phase,
+        phase + 0.1,
         sky,
     );
 
@@ -190,7 +190,7 @@ fn draw_tree(
                 new_radius,
                 point_phase,
                 depth + 1,
-                sky / (child_count as f32),
+                PI / 2.0,
             ))
         });
 
@@ -202,7 +202,7 @@ fn view(_app: &App, _model: &Model, frame: Frame) {
 
     draw.background().color(BLACK);
 
-    for draw_crate in draw_tree((0.0, 0.0), &_model.tree.children[1], 300.0, 1.0, 0, 2.0 * PI) {
+    for draw_crate in draw_tree((0.0, 0.0), &_model.tree.children[1], 150.0, _app.time, 0, 2.0 * PI) {
         draw.ellipse()
             .color(srgba(draw_crate.r, draw_crate.g, draw_crate.b, 127))
             .x_y(draw_crate.x, draw_crate.y)
