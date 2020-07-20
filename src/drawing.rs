@@ -1,4 +1,5 @@
 use crate::parse_cargo_tree_output::TreeNode;
+use std::rc::Rc;
 
 pub type Point = (f32, f32);
 pub type Color = (u8, u8, u8);
@@ -45,6 +46,7 @@ pub struct DrawCrate {
     pub radius: f32,
     pub color: Color,
     pub name: String,
+    pub tree: Rc<TreeNode>
 }
 
 pub struct DrawLine {
@@ -55,7 +57,7 @@ pub struct DrawLine {
 
 pub fn draw_tree(
     center: Point,
-    tree: &TreeNode,
+    tree: Rc<TreeNode>,
     radius: f32,
     phase: f32,
     depth: usize,
@@ -71,6 +73,7 @@ pub fn draw_tree(
         radius: radius,
         color: color,
         name: tree.name.clone(),
+        tree: Rc::clone(&tree) 
     });
 
     let child_count = tree.children.len();

@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct TreeNode {
@@ -57,7 +58,6 @@ fn tree(flat: Vec<FlatEntry>) -> TreeNode {
     }
 }
 
-pub fn parse_tree(raw: String) -> TreeNode {
-    println!("{}", raw);
-    tree(parse(raw))
+pub fn parse_tree(raw: String) -> Rc<TreeNode> {
+    Rc::new(tree(parse(raw)))
 }

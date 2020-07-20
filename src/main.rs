@@ -3,6 +3,7 @@ use nannou::draw;
 use nannou::prelude::*;
 use std::io::{self, Write};
 use std::process::Command;
+use std::rc::Rc;
 extern crate approx;
 
 pub mod parse_cargo_tree_output;
@@ -16,9 +17,10 @@ fn main() {
 }
 
 struct Model {
-    tree: TreeNode,
+    tree: Rc<TreeNode>,
     active: Vec<String>,
     mouse_last: Point,
+    active_tree: Rc<TreeNode>,
 }
 
 fn get_active() -> Vec<String> {
@@ -35,20 +37,19 @@ fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
 
         // Mouse events
         MouseMoved(_pos) => _model.mouse_last = (_pos.x, _pos.y),
-        MousePressed(_button) => {
-            let (draw_crates, _draw_lines) = draw_tree_defaults(&_model.tree, _app.time);
+        MousePressed(_button) => {}
+        MouseReleased(_button) => {
+            let (draw_crates, _draw_lines) = draw_tree_defaults(&_model.active_tree, _app.time);
 
             for draw_crate in draw_crates {
                 let (x1, y1) = _model.mouse_last;
                 let (x2, y2) = draw_crate.center;
 
                 if (x2 - x1).powf(2.0) + (y2 - y1).powf(2.0) < draw_crate.radius.powf(2.0) {
-                    // TODO: Change tree_current here
-                    println!("Pressed on {}", draw_crate.name);
+                    _model.active_tree = Rc::clone(&_model.active_tree);
                 }
             }
         }
-        MouseReleased(_button) => {}
         MouseWheel(_amount, _phase) => {}
         MouseEntered => {}
         MouseExited => {}
@@ -87,16 +88,19 @@ fn model(_app: &App) -> Model {
 
     let out = String::from_utf8_lossy(&output.stdout).to_string();
 
+    let parsed_tree = &parse_tree(out);
+
     Model {
-        tree: parse_tree(out),
+        tree: Rc::clone(&parsed_tree),
         active: Vec::<_>::new(),
         mouse_last: (0.0, 0.0),
+        active_tree: Rc::clone(&parsed_tree),
     }
 }
 
 fn update(_app: &App, _model: &mut Model, _update: Update) {}
 
-fn draw_tree_defaults(tree: &TreeNode, time: app::DrawScalar) -> (Vec<DrawCrate>, Vec<DrawLine>) {
+fn draw_tree_defaults(tree: Rc<TreeNode>, time: app::DrawScalar) -> (Vec<DrawCrate>, Vec<DrawLine>) {
     draw_tree(
         (0.0, 0.0),
         tree,
@@ -109,7 +113,7 @@ fn draw_tree_defaults(tree: &TreeNode, time: app::DrawScalar) -> (Vec<DrawCrate>
     )
 }
 
-fn draw_dep(time: app::DrawScalar, draw: &draw::Draw, tree: &TreeNode) {
+fn draw_dep(time: app::DrawScalar, draw: &draw::Draw, tree: Rc<TreeNode>) {
     let (tree_crates, tree_lines) = draw_tree_defaults(tree, time);
 
     for draw_line in tree_lines {
@@ -161,7 +165,7 @@ fn view(_app: &App, _model: &Model, frame: Frame) {
     //     draw_dep(center, _app.time, &draw, child)
     // }
 
-    draw_dep(_app.time, &draw, &_model.tree);
+    draw_dep(_app.time, &draw, _model.active_tree);
 
     draw.to_frame(_app, &frame).unwrap();
 }
