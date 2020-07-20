@@ -46,7 +46,7 @@ pub struct DrawCrate {
     pub radius: f32,
     pub color: Color,
     pub name: String,
-    pub tree: Rc<TreeNode>
+    pub tree: Rc<TreeNode>,
 }
 
 pub struct DrawLine {
@@ -73,7 +73,7 @@ pub fn draw_tree(
         radius: radius,
         color: color,
         name: tree.name.clone(),
-        tree: Rc::clone(&tree) 
+        tree: Rc::clone(&tree),
     });
 
     let child_count = tree.children.len();

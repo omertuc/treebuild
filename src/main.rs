@@ -44,7 +44,8 @@ fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
         MouseMoved(_pos) => _model.mouse_last = (_pos.x, _pos.y),
         MousePressed(_button) => {}
         MouseReleased(_button) => {
-            let (draw_crates, _draw_lines) = draw_tree_defaults(Rc::clone(&_model.active_tree), _app.time);
+            let (draw_crates, _draw_lines) =
+                draw_tree_defaults(Rc::clone(&_model.active_tree), _app.time);
 
             for draw_crate in draw_crates {
                 let (x1, y1) = _model.mouse_last;
@@ -105,7 +106,10 @@ fn model(_app: &App) -> Model {
 
 fn update(_app: &App, _model: &mut Model, _update: Update) {}
 
-fn draw_tree_defaults(tree: Rc<TreeNode>, time: app::DrawScalar) -> (Vec<DrawCrate>, Vec<DrawLine>) {
+fn draw_tree_defaults(
+    tree: Rc<TreeNode>,
+    time: app::DrawScalar,
+) -> (Vec<DrawCrate>, Vec<DrawLine>) {
     draw_tree(
         (0.0, 0.0),
         tree,
