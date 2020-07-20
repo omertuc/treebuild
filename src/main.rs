@@ -34,9 +34,7 @@ fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
     match event {
         // Keyboard events
         KeyPressed(_key) => {
-            if _key == VirtualKeyCode::Space {
-                _model.active_tree = Rc::clone(&_model.tree)
-            }
+            _model.active_tree = Rc::clone(&_model.tree)
         }
         KeyReleased(_key) => {}
 
@@ -144,7 +142,7 @@ fn draw_dep(time: app::DrawScalar, draw: &draw::Draw, tree: Rc<TreeNode>) {
                 draw_crate.color.0,
                 draw_crate.color.1,
                 draw_crate.color.2,
-                255,
+                127,
             ))
             .x_y(draw_crate.center.0, draw_crate.center.1)
             .w_h(draw_crate.radius * 2.0, draw_crate.radius * 2.0);

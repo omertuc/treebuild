@@ -14,11 +14,17 @@ fn get_satellites(
 ) -> (f32, Vec<(Point, f32)>) {
     let diff_angle = sky / (amount as f32);
 
+    let maximum = root_radius * 0.7;
+
     (
-        f32::min(
-            in_radius * (2.0f32.sqrt()) * (1.0 - diff_angle.cos()).sqrt() / 2.0,
-            root_radius * 0.7,
-        ),
+        if diff_angle > std::f32::consts::PI {
+            root_radius * 0.7
+        } else {
+            f32::min(
+                in_radius * (2.0f32.sqrt()) * (1.0 - diff_angle.cos()).sqrt() / 2.0,
+                root_radius * 0.7,
+            )
+        },
         (0u32..(amount as u32))
             // 0 1 2 3 5 6 7 ... to 0 1 1 2 2 3 3 ...
             .map(|idx| ((idx as f32) / 2.0).ceil())
@@ -90,35 +96,48 @@ pub fn draw_tree(
     sats.into_iter()
         .zip(tree.children.iter())
         .for_each(|((point, point_phase), child)| {
+            let child_center = if child.children.len() < 5 {
+                point
+            } else {
+                (
+                    point.0 + new_radius * point_phase.cos() * 2.0,
+                    point.1 + new_radius * point_phase.sin() * 2.0,
+                )
+            };
+
+            let child_sky = {
+                if Rc::clone(&child).children.len() < 5 {
+                    std::f32::consts::PI / 2.0
+                } else {
+                    std::f32::consts::PI * 1.5
+                }
+            };
+
             let (child_crate_draws, child_line_draws) = draw_tree(
-                {
-                    if child.children.len() < 5 {
-                        (point.0, point.1)
-                    } else {
-                        (
-                            point.0 + new_radius * point_phase.cos(),
-                            point.1 + new_radius * point_phase.sin(),
-                        )
-                    }
-                },
+                child_center,
                 Rc::clone(&child),
                 new_radius,
                 point_phase,
                 depth + 1,
-                {
-                    if Rc::clone(&child).children.len() < 5 {
-                        std::f32::consts::PI / 2.0
-                    } else {
-                        std::f32::consts::PI * 1.5
-                    }
-                },
+                child_sky,
                 phase_accum,
                 (220, 130, 110),
             );
 
+            // Make sure the line starts from the circle and not from the center
+            let line_start = (
+                center.0 + point_phase.cos() * radius,
+                center.1 + point_phase.sin() * radius,
+            );
+
+            let line_end = (
+                child_center.0 - (point_phase).cos() * new_radius,
+                child_center.1 - (point_phase).sin() * new_radius,
+            );
+
             line_draws.push(DrawLine {
-                p1: center,
-                p2: point,
+                p1: line_start,
+                p2: line_end,
                 color: (255, 255, 255),
             });
 
