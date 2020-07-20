@@ -88,7 +88,7 @@ pub fn draw_tree(
     );
 
     sats.into_iter()
-        .zip(tree.children.into_iter())
+        .zip(tree.children.;iter())
         .for_each(|((point, point_phase), child)| {
             let (child_crate_draws, child_line_draws) = draw_tree(
                 {
@@ -101,12 +101,12 @@ pub fn draw_tree(
                         )
                     }
                 },
-                child,
+                Rc::clone(&child),
                 new_radius,
                 point_phase,
                 depth + 1,
                 {
-                    if child.children.len() < 5 {
+                    if Rc::clone(&child).children.len() < 5 {
                         std::f32::consts::PI / 2.0
                     } else {
                         std::f32::consts::PI * 1.5
