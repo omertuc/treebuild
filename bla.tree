@@ -1,0 +1,410 @@
+0treebuild v0.1.0 (/home/omer/repos/treebuild)
+1approx v0.3.2
+2num-traits v0.2.12
+3autocfg v1.0.0
+1itertools v0.9.0
+2either v1.5.3
+1nannou v0.14.1
+2cgmath v0.17.0
+3approx v0.3.2 (*)
+3num-traits v0.2.12 (*)
+3rand v0.6.5
+4libc v0.2.72
+4rand_chacha v0.1.1
+5rand_core v0.3.1
+6rand_core v0.4.2
+5autocfg v0.1.7
+4rand_core v0.4.2
+4rand_hc v0.1.0
+5rand_core v0.3.1 (*)
+4rand_isaac v0.1.1
+5rand_core v0.3.1 (*)
+4rand_jitter v0.1.4
+5rand_core v0.4.2
+4rand_os v0.1.3
+5libc v0.2.72
+5rand_core v0.4.2
+4rand_pcg v0.1.2
+5rand_core v0.4.2
+5autocfg v0.1.7
+4rand_xorshift v0.1.1
+5rand_core v0.3.1 (*)
+4autocfg v0.1.7
+3serde v1.0.114
+4serde_derive v1.0.114
+5proc-macro2 v1.0.18
+6unicode-xid v0.2.1
+5quote v1.0.7
+6proc-macro2 v1.0.18 (*)
+5syn v1.0.34
+6proc-macro2 v1.0.18 (*)
+6quote v1.0.7 (*)
+6unicode-xid v0.2.1
+2conrod_core v0.69.0
+3conrod_derive v0.69.0
+4proc-macro2 v1.0.18 (*)
+4quote v1.0.7 (*)
+4syn v1.0.34 (*)
+3copypasta v0.6.3
+4smithay-clipboard v0.4.0
+5nix v0.14.1
+6bitflags v1.2.1
+6cfg-if v0.1.10
+6libc v0.2.72
+6void v1.0.2
+5smithay-client-toolkit v0.6.6
+6andrew v0.2.1
+7bitflags v1.2.1
+7line_drawing v0.7.0
+8num-traits v0.2.12 (*)
+7rusttype v0.7.9
+8rusttype v0.8.3
+9approx v0.3.2 (*)
+9crossbeam-deque v0.7.3
+10crossbeam-epoch v0.8.2
+11cfg-if v0.1.10
+11crossbeam-utils v0.7.2
+12cfg-if v0.1.10
+12lazy_static v1.4.0
+12autocfg v1.0.0
+11lazy_static v1.4.0
+11maybe-uninit v2.0.0
+11memoffset v0.5.5
+12autocfg v1.0.0
+11scopeguard v1.1.0
+11autocfg v1.0.0
+10crossbeam-utils v0.7.2 (*)
+10maybe-uninit v2.0.0
+9crossbeam-utils v0.7.2 (*)
+9linked-hash-map v0.5.3
+9num_cpus v1.13.0
+10libc v0.2.72
+9ordered-float v1.1.0
+10num-traits v0.2.12 (*)
+9rustc-hash v1.1.0
+9stb_truetype v0.3.1
+10byteorder v1.3.4
+7walkdir v2.3.1
+8same-file v1.0.6
+7xdg v2.2.0
+7xml-rs v0.8.3
+6bitflags v1.2.1
+6dlib v0.4.2
+7libloading v0.6.2
+6lazy_static v1.4.0
+6memmap v0.7.0
+7libc v0.2.72
+6nix v0.14.1 (*)
+6wayland-client v0.23.6
+7bitflags v1.2.1
+7calloop v0.4.4
+8mio v0.6.22
+9cfg-if v0.1.10
+9iovec v0.1.4
+10libc v0.2.72
+9libc v0.2.72
+9log v0.4.8
+10cfg-if v0.1.10
+9net2 v0.2.34
+10cfg-if v0.1.10
+10libc v0.2.72
+9slab v0.4.2
+8mio-extras v2.0.6
+9lazycell v1.2.1
+9log v0.4.8 (*)
+9mio v0.6.22 (*)
+9slab v0.4.2
+8nix v0.14.1 (*)
+7downcast-rs v1.2.0
+7libc v0.2.72
+7mio v0.6.22 (*)
+7nix v0.14.1 (*)
+7wayland-commons v0.23.6
+8nix v0.14.1 (*)
+8wayland-sys v0.23.6
+9dlib v0.4.2 (*)
+9lazy_static v1.4.0
+7wayland-sys v0.23.6 (*)
+7wayland-scanner v0.23.6
+8proc-macro2 v0.4.30
+9unicode-xid v0.1.0
+8quote v0.6.13
+9proc-macro2 v0.4.30 (*)
+8xml-rs v0.8.3
+6wayland-protocols v0.23.6
+7bitflags v1.2.1
+7wayland-client v0.23.6 (*)
+7wayland-commons v0.23.6 (*)
+7wayland-scanner v0.23.6 (*)
+4wayland-client v0.23.6 (*)
+4x11-clipboard v0.5.1
+5xcb v0.9.0
+6libc v0.2.72
+6log v0.4.8 (*)
+6libc v0.2.72
+3daggy v0.5.0
+4petgraph v0.4.13
+5fixedbitset v0.1.9
+3fnv v1.0.7
+3instant v0.1.6
+3num v0.2.1
+4num-bigint v0.2.6
+5num-integer v0.1.43
+6num-traits v0.2.12 (*)
+6autocfg v1.0.0
+5num-traits v0.2.12 (*)
+5autocfg v1.0.0
+4num-complex v0.2.4
+5num-traits v0.2.12 (*)
+5autocfg v1.0.0
+4num-integer v0.1.43 (*)
+4num-iter v0.1.41
+5num-integer v0.1.43 (*)
+5num-traits v0.2.12 (*)
+5autocfg v1.0.0
+4num-rational v0.2.4
+5num-bigint v0.2.6 (*)
+5num-integer v0.1.43 (*)
+5num-traits v0.2.12 (*)
+5autocfg v1.0.0
+4num-traits v0.2.12 (*)
+3pistoncore-input v0.24.0
+4bitflags v1.2.1
+4piston-viewport v0.5.0
+5piston-float v0.3.0
+4serde v1.0.114 (*)
+4serde_derive v1.0.114 (*)
+3rusttype v0.8.3 (*)
+2conrod_wgpu v0.69.0
+3conrod_core v0.69.0 (*)
+3wgpu v0.4.0
+4arrayvec v0.5.1
+4raw-window-handle v0.3.3
+5libc v0.2.72
+4wgpu-native v0.4.3
+5arrayvec v0.5.1
+5bitflags v1.2.1
+5copyless v0.1.5
+5fxhash v0.2.1
+6byteorder v1.3.4
+5gfx-backend-empty v0.4.0
+6gfx-hal v0.4.1
+7bitflags v1.2.1
+7raw-window-handle v0.3.3 (*)
+7smallvec v0.6.13
+8maybe-uninit v2.0.0
+6raw-window-handle v0.3.3 (*)
+5gfx-backend-vulkan v0.4.3
+6arrayvec v0.5.1
+6ash v0.29.0
+7shared_library v0.1.9
+8lazy_static v1.4.0
+8libc v0.2.72
+6byteorder v1.3.4
+6gfx-hal v0.4.1 (*)
+6lazy_static v1.4.0
+6log v0.4.8 (*)
+6raw-window-handle v0.3.3 (*)
+6smallvec v0.6.13 (*)
+6x11 v2.18.2
+7libc v0.2.72
+7pkg-config v0.3.18
+5gfx-hal v0.4.1 (*)
+5lazy_static v1.4.0
+5log v0.4.8 (*)
+5parking_lot v0.9.0
+6lock_api v0.3.4
+7scopeguard v1.1.0
+6parking_lot_core v0.6.2
+7cfg-if v0.1.10
+7libc v0.2.72
+7smallvec v0.6.13 (*)
+7rustc_version v0.2.3
+8semver v0.9.0
+9semver-parser v0.7.0
+6rustc_version v0.2.3 (*)
+5raw-window-handle v0.3.3 (*)
+5rendy-descriptor v0.5.1
+6gfx-hal v0.4.1 (*)
+6log v0.4.8 (*)
+6relevant v0.4.2
+7cfg-if v0.1.10
+7log v0.4.8 (*)
+6smallvec v0.6.13 (*)
+5rendy-memory v0.5.2
+6colorful v0.2.1
+6gfx-hal v0.4.1 (*)
+6hibitset v0.6.3
+7atom v0.3.5
+6log v0.4.8 (*)
+6relevant v0.4.2 (*)
+6slab v0.4.2
+6smallvec v0.6.13 (*)
+5smallvec v0.6.13 (*)
+5vec_map v0.8.2
+4zerocopy v0.2.8
+5byteorder v1.3.4
+5zerocopy-derive v0.1.4
+6proc-macro2 v0.4.30 (*)
+6syn v0.15.44
+7proc-macro2 v0.4.30 (*)
+7quote v0.6.13 (*)
+7unicode-xid v0.1.0
+6synstructure v0.10.2
+7proc-macro2 v0.4.30 (*)
+7quote v0.6.13 (*)
+7syn v0.15.44 (*)
+7unicode-xid v0.1.0
+2conrod_winit v0.69.0
+2daggy v0.6.0
+3petgraph v0.4.13 (*)
+2find_folder v0.3.0
+2image v0.23.7
+3bytemuck v1.2.0
+3byteorder v1.3.4
+3gif v0.10.3
+4color_quant v1.0.1
+4lzw v0.10.0
+3jpeg-decoder v0.1.20
+4byteorder v1.3.4
+4rayon v1.3.1
+5crossbeam-deque v0.7.3 (*)
+5either v1.5.3
+5rayon-core v1.7.1
+6crossbeam-deque v0.7.3 (*)
+6crossbeam-queue v0.2.3
+7cfg-if v0.1.10
+7crossbeam-utils v0.7.2 (*)
+7maybe-uninit v2.0.0
+6crossbeam-utils v0.7.2 (*)
+6lazy_static v1.4.0
+6num_cpus v1.13.0 (*)
+5autocfg v1.0.0
+3num-iter v0.1.41 (*)
+3num-rational v0.3.0
+4num-integer v0.1.43 (*)
+4num-traits v0.2.12 (*)
+4autocfg v1.0.0
+3num-traits v0.2.12 (*)
+3png v0.16.6
+4bitflags v1.2.1
+4crc32fast v1.2.0
+5cfg-if v0.1.10
+4deflate v0.8.6
+5adler32 v1.1.0
+5byteorder v1.3.4
+4miniz_oxide v0.3.7
+5adler32 v1.1.0
+3scoped_threadpool v0.1.9
+3tiff v0.5.0
+4byteorder v1.3.4
+4lzw v0.10.0
+4miniz_oxide v0.3.7 (*)
+2lyon v0.15.9
+3lyon_algorithms v0.15.1
+4lyon_path v0.15.2
+5lyon_geom v0.15.3
+6arrayvec v0.5.1
+6euclid v0.20.14
+7num-traits v0.2.12 (*)
+6num-traits v0.2.12 (*)
+4sid v0.6.1
+5num-traits v0.2.12 (*)
+3lyon_tessellation v0.15.9
+4arrayvec v0.5.1
+4lyon_path v0.15.2 (*)
+4sid v0.6.1 (*)
+2noise v0.6.0
+3image v0.18.0
+4byteorder v1.3.4
+4enum_primitive v0.1.1
+5num-traits v0.1.43
+6num-traits v0.2.12 (*)
+4gif v0.9.2
+5color_quant v1.0.1
+5lzw v0.10.0
+4jpeg-decoder v0.1.20 (*)
+4num-iter v0.1.41 (*)
+4num-rational v0.1.42
+5num-integer v0.1.43 (*)
+5num-traits v0.2.12 (*)
+4num-traits v0.1.43 (*)
+4png v0.11.0
+5bitflags v1.2.1
+5deflate v0.7.20
+6adler32 v1.1.0
+6byteorder v1.3.4
+5inflate v0.3.4
+6adler32 v1.1.0
+5num-iter v0.1.41 (*)
+4scoped_threadpool v0.1.9
+3rand v0.5.6
+4libc v0.2.72
+4rand_core v0.3.1 (*)
+2notosans v0.1.0
+2palette v0.5.0
+3approx v0.3.2 (*)
+3num-traits v0.2.12 (*)
+3palette_derive v0.5.0
+4proc-macro2 v1.0.18 (*)
+4quote v1.0.7 (*)
+4syn v1.0.34 (*)
+3phf v0.8.0
+4phf_shared v0.8.0
+5siphasher v0.3.3
+3phf_codegen v0.8.0
+4phf_generator v0.8.0
+5phf_shared v0.8.0 (*)
+5rand v0.7.3
+6getrandom v0.1.14
+7cfg-if v0.1.10
+7libc v0.2.72
+6libc v0.2.72
+6rand_chacha v0.2.2
+7ppv-lite86 v0.2.8
+7rand_core v0.5.1
+8getrandom v0.1.14 (*)
+6rand_core v0.5.1 (*)
+6rand_pcg v0.2.1
+7rand_core v0.5.1 (*)
+4phf_shared v0.8.0 (*)
+2pennereq v0.3.1
+3num-traits v0.2.12 (*)
+2rand v0.7.3 (*)
+2rusttype v0.8.3 (*)
+2serde v1.0.114 (*)
+2serde_derive v1.0.114 (*)
+2serde_json v1.0.56
+3itoa v0.4.6
+3ryu v1.0.5
+3serde v1.0.114 (*)
+2threadpool v1.8.1
+3num_cpus v1.13.0 (*)
+2toml v0.5.6
+3serde v1.0.114 (*)
+2walkdir v2.3.1 (*)
+2wgpu v0.4.0 (*)
+2winit v0.22.2
+3bitflags v1.2.1
+3instant v0.1.6
+3lazy_static v1.4.0
+3libc v0.2.72
+3log v0.4.8 (*)
+3mio v0.6.22 (*)
+3mio-extras v2.0.6 (*)
+3parking_lot v0.10.2
+4lock_api v0.3.4 (*)
+4parking_lot_core v0.7.2
+5cfg-if v0.1.10
+5libc v0.2.72
+5smallvec v1.4.1
+3percent-encoding v2.1.0
+3raw-window-handle v0.3.3 (*)
+3smithay-client-toolkit v0.6.6 (*)
+3wayland-client v0.23.6 (*)
+3x11-dl v2.18.5
+4lazy_static v1.4.0
+4libc v0.2.72
+4maybe-uninit v2.0.0
+4pkg-config v0.3.18
+1rand v0.7.3 (*)

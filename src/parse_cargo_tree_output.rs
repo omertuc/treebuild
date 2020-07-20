@@ -4,7 +4,7 @@ use std::rc::Rc;
 #[derive(Debug)]
 pub struct TreeNode {
     pub name: String,
-    pub children: Vec<TreeNode>,
+    pub children: Vec<Rc<TreeNode>>,
 }
 
 #[derive(Debug, Clone)]
@@ -36,11 +36,11 @@ fn parse(raw: String) -> Vec<FlatEntry> {
     result
 }
 
-fn tree(flat: Vec<FlatEntry>) -> TreeNode {
+fn tree(flat: Vec<FlatEntry>) -> Rc<TreeNode> {
     let root = &flat[0];
     let candidates = &flat[1..];
 
-    TreeNode {
+    Rc::<_>::new(TreeNode {
         name: root.name.to_string(),
         children: candidates
             .iter()
@@ -55,9 +55,9 @@ fn tree(flat: Vec<FlatEntry>) -> TreeNode {
             })
             .sorted_by_key(|child| child.children.len())
             .collect::<Vec<_>>(),
-    }
+    })
 }
 
 pub fn parse_tree(raw: String) -> Rc<TreeNode> {
-    Rc::new(tree(parse(raw)))
+    tree(parse(raw))
 }

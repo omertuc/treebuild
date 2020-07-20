@@ -39,7 +39,7 @@ fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
         MouseMoved(_pos) => _model.mouse_last = (_pos.x, _pos.y),
         MousePressed(_button) => {}
         MouseReleased(_button) => {
-            let (draw_crates, _draw_lines) = draw_tree_defaults(&_model.active_tree, _app.time);
+            let (draw_crates, _draw_lines) = draw_tree_defaults(Rc::clone(&_model.active_tree), _app.time);
 
             for draw_crate in draw_crates {
                 let (x1, y1) = _model.mouse_last;
@@ -165,7 +165,7 @@ fn view(_app: &App, _model: &Model, frame: Frame) {
     //     draw_dep(center, _app.time, &draw, child)
     // }
 
-    draw_dep(_app.time, &draw, _model.active_tree);
+    draw_dep(_app.time, &draw, Rc::clone(&_model.active_tree));
 
     draw.to_frame(_app, &frame).unwrap();
 }
