@@ -4,6 +4,7 @@ use nannou::prelude::*;
 use std::io::{self, Write};
 use std::process::Command;
 use std::rc::Rc;
+use winit::event::VirtualKeyCode;
 extern crate approx;
 
 pub mod parse_cargo_tree_output;
@@ -32,7 +33,11 @@ fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
     // We can `match` on the event to do something different depending on the kind of event.
     match event {
         // Keyboard events
-        KeyPressed(_key) => {}
+        KeyPressed(_key) => {
+            if _key == VirtualKeyCode::Space {
+                _model.active_tree = Rc::clone(&_model.tree)
+            }
+        }
         KeyReleased(_key) => {}
 
         // Mouse events
@@ -46,7 +51,7 @@ fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
                 let (x2, y2) = draw_crate.center;
 
                 if (x2 - x1).powf(2.0) + (y2 - y1).powf(2.0) < draw_crate.radius.powf(2.0) {
-                    _model.active_tree = Rc::clone(&_model.active_tree);
+                    _model.active_tree = Rc::clone(&draw_crate.tree);
                 }
             }
         }

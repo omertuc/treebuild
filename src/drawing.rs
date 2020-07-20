@@ -88,7 +88,7 @@ pub fn draw_tree(
     );
 
     sats.into_iter()
-        .zip(tree.children.;iter())
+        .zip(tree.children.iter())
         .for_each(|((point, point_phase), child)| {
             let (child_crate_draws, child_line_draws) = draw_tree(
                 {

@@ -2091,6 +2091,7 @@ dependencies = [
  "itertools",
  "nannou",
  "rand 0.7.3",
+ "winit",
 ]
 
 [[package]]
