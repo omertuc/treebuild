@@ -1,10 +1,13 @@
 use itertools::Itertools;
+use md5;
 use std::rc::Rc;
+use crate::drawing::Color;
 
 #[derive(Debug)]
 pub struct TreeNode {
     pub name: String,
     pub children: Vec<Rc<TreeNode>>,
+    pub color: Color
 }
 
 #[derive(Debug, Clone)]
@@ -40,8 +43,13 @@ fn tree(flat: Vec<FlatEntry>) -> Rc<TreeNode> {
     let root = &flat[0];
     let candidates = &flat[1..];
 
+    let name = root.name.to_string();
+
+    let digest = md5::compute(name.clone().into_bytes());
+
     Rc::<_>::new(TreeNode {
-        name: root.name.to_string(),
+        color: (digest[0], digest[1], digest[2]),
+        name: name,
         children: candidates
             .iter()
             .take_while(|child| child.depth > root.depth)

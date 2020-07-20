@@ -100,8 +100,8 @@ pub fn draw_tree(
                 point
             } else {
                 (
-                    point.0 + new_radius * point_phase.cos() * 2.0,
-                    point.1 + new_radius * point_phase.sin() * 2.0,
+                    point.0 + new_radius * point_phase.cos() * 1.5,
+                    point.1 + new_radius * point_phase.sin() * 1.5,
                 )
             };
 
@@ -121,7 +121,7 @@ pub fn draw_tree(
                 depth + 1,
                 child_sky,
                 phase_accum,
-                (220, 130, 110),
+                child.color,
             );
 
             // Make sure the line starts from the circle and not from the center

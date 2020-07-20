@@ -4,7 +4,6 @@ use nannou::prelude::*;
 use std::io::{self, Write};
 use std::process::Command;
 use std::rc::Rc;
-use winit::event::VirtualKeyCode;
 extern crate approx;
 
 pub mod parse_cargo_tree_output;
