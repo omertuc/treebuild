@@ -12,6 +12,9 @@ use parse_cargo_tree_output::{parse_tree, TreeNode};
 mod drawing;
 use drawing::{draw_tree, DrawCrate, DrawLine, Point};
 
+mod active;
+use active::launch;
+
 fn main() {
     nannou::app(model).update(update).run();
 }
@@ -23,10 +26,6 @@ struct Model {
     active_tree: Rc<TreeNode>,
 }
 
-fn get_active() -> Vec<String> {
-    // TODO: pgrep rustc to get current compiling modules
-    Vec::<_>::new()
-}
 
 fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
     // We can `match` on the event to do something different depending on the kind of event.
@@ -74,6 +73,8 @@ fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
 }
 
 fn model(_app: &App) -> Model {
+    active::launch();
+
     _app.new_window().event(event).view(view).build().unwrap();
 
     let output = Command::new("cargo")
