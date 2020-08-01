@@ -13,7 +13,7 @@ mod drawing;
 use drawing::{draw_tree, DrawCrate, DrawLine, Point};
 
 mod active;
-use active::launch;
+use active::get_active;
 
 fn main() {
     nannou::app(model).update(update).run();
@@ -26,14 +26,11 @@ struct Model {
     active_tree: Rc<TreeNode>,
 }
 
-
 fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
     // We can `match` on the event to do something different depending on the kind of event.
     match event {
         // Keyboard events
-        KeyPressed(_key) => {
-            _model.active_tree = Rc::clone(&_model.tree)
-        }
+        KeyPressed(_key) => _model.active_tree = Rc::clone(&_model.tree),
         KeyReleased(_key) => {}
 
         // Mouse events
@@ -41,7 +38,7 @@ fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
         MousePressed(_button) => {}
         MouseReleased(_button) => {
             let (draw_crates, _draw_lines) =
-                draw_tree_defaults(Rc::clone(&_model.active_tree), _app.time);
+                draw_tree_defaults(Rc::clone(&_model.active_tree), _app.time, vec![]);
 
             for draw_crate in draw_crates {
                 let (x1, y1) = _model.mouse_last;
@@ -73,8 +70,6 @@ fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
 }
 
 fn model(_app: &App) -> Model {
-    active::launch();
-
     _app.new_window().event(event).view(view).build().unwrap();
 
     let output = Command::new("cargo")
@@ -107,6 +102,7 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {}
 fn draw_tree_defaults(
     tree: Rc<TreeNode>,
     time: app::DrawScalar,
+    active: Vec<String>,
 ) -> (Vec<DrawCrate>, Vec<DrawLine>) {
     draw_tree(
         (0.0, 0.0),
@@ -117,11 +113,14 @@ fn draw_tree_defaults(
         2.0 * PI,
         time.sin() * 0.1,
         (200, 100, 130),
+        &active,
     )
 }
 
 fn draw_dep(time: app::DrawScalar, draw: &draw::Draw, tree: Rc<TreeNode>) {
-    let (tree_crates, tree_lines) = draw_tree_defaults(tree, time);
+    let active = active::get_active();
+
+    let (tree_crates, tree_lines) = draw_tree_defaults(tree, time, active);
 
     for draw_line in tree_lines {
         draw.line()

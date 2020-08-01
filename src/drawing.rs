@@ -14,8 +14,6 @@ fn get_satellites(
 ) -> (f32, Vec<(Point, f32)>) {
     let diff_angle = sky / (amount as f32);
 
-    let maximum = root_radius * 0.7;
-
     (
         if diff_angle > std::f32::consts::PI {
             root_radius * 0.7
@@ -70,9 +68,21 @@ pub fn draw_tree(
     sky: f32,
     phase_accum: f32,
     color: Color,
+    active: &Vec<String>
 ) -> (Vec<DrawCrate>, Vec<DrawLine>) {
     let mut crate_draws = Vec::<DrawCrate>::new();
     let mut line_draws = Vec::<DrawLine>::new();
+
+    // Draw a red outline if active
+    if active.contains(&tree.name) {
+        crate_draws.push(DrawCrate {
+            center: center,
+            radius: radius * 1.10,
+            color: (255, 0, 0),
+            name: "".to_string(),
+            tree: Rc::clone(&tree),
+        });
+    }
 
     crate_draws.push(DrawCrate {
         center: center,
@@ -122,6 +132,7 @@ pub fn draw_tree(
                 child_sky,
                 phase_accum,
                 child.color,
+                &active
             );
 
             // Make sure the line starts from the circle and not from the center

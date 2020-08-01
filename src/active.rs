@@ -1,46 +1,48 @@
-use std::io::Read;
-use std::io::{self, Write};
 use std::process::Command;
-use std::thread;
-use std::time::Duration;
-use sysinfo::System;
 
-pub fn launch() {
-    // thread::spawn(|| {
-    let build_dir = "/home/omer/repos/cargo";
+pub fn get_children(parent: usize) -> Vec<String> {
+    let output = Command::new("pgrep")
+        .arg("--list-full")
+        .arg("--parent")
+        .arg(parent.to_string())
+        .output()
+        .expect("Failed to execute pgrep");
 
-    Command::new("cargo").arg("clean").current_dir(build_dir);
+    let mut crates = Vec::<String>::new();
+    if output.status.success() {
+        let output_str = String::from_utf8_lossy(&output.stdout);
 
-    let child = Command::new("cargo")
-        .arg("run")
-        .arg("--color")
-        .arg("never")
-        .current_dir(build_dir)
-        .stderr(std::process::Stdio::piped())
-        .spawn()
-        .unwrap();
+        for line in output_str.lines() {
+            let mut fields_iter = line.split_whitespace();
+            for field in &mut fields_iter {
+                if field == "--crate-name" {
+                    break;
+                }
+            }
 
-    let child_stderr = child.stderr.unwrap();
-
-    let reader = std::io::BufReader::new(child_stderr);
-
-    for bytes in reader.bytes() {
-        println!("{:?}", bytes.unwrap());
+            if let Some(crate_name) = fields_iter.next() {
+                crates.push(crate_name.to_owned());
+            }
+        }
+    } else {
+        println!("Failed to pgrep ")
     }
 
-    // });
+    crates
 }
 
-fn get_active() -> Vec<String> {
-    // let system = System::new_all();
+pub fn get_active() -> Vec<String> {
+    let output = Command::new("pgrep")
+        .arg("cargo")
+        .output()
+        .expect("Failed to execute pgrep");
 
-    // // First we update all information of our system struct.
-    // system.refresh_all();
+    if output.status.success() {
+        let output_str = String::from_utf8_lossy(&output.stdout);
 
-    // // Now let's print every process' id and name:
-    // for process in system.get_process_by_name("rustc") {
-    //     println!("{} {}", process.pid(), process.name());
-    // }
-
+        if let Ok(pid) = output_str.trim().parse::<usize>() {
+            return get_children(pid);
+        }
+    }
     Vec::<_>::new()
 }
