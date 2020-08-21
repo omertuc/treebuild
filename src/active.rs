@@ -20,13 +20,10 @@ pub fn get_children(parent: usize) -> HashSet<String> {
             }
 
             if let Some(crate_name) = fields_iter.next() {
-                crates.insert(crate_name.to_owned());
+                crates.insert(crate_name.replace("_", "-").to_owned());
             }
         }
-    } else {
-        println!("Failed to pgrep on cargo children")
     }
-
     crates
 }
 
@@ -43,11 +40,7 @@ pub fn get_active() -> HashSet<String> {
 
         if let Ok(pid) = trimmed.parse::<usize>() {
             return get_children(pid);
-        } else {
-            println!("Failed to get cargo pid from pgrep output {}", trimmed);
         }
-    } else {
-        println!("Failed to execute pgrep on cargo");
     }
 
     HashSet::<_>::new()

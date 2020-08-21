@@ -1,6 +1,7 @@
 use nannou::app;
 use nannou::draw;
 use nannou::prelude::*;
+use std::env;
 use std::io::{self, Write};
 use std::process::Command;
 use std::{collections::HashSet, rc::Rc};
@@ -15,17 +16,25 @@ use drawing::{draw_tree, DrawCrate, DrawLine, Point};
 
 mod active;
 
-fn main() {
-    nannou::app(model).update(update).run();
-}
-
-struct Model {
+pub struct Model {
     tree: Rc<TreeNode>,
     mouse_last: Point,
     active_tree: Rc<TreeNode>,
     completed: HashSet<String>,
     currently_active: HashSet<String>,
     previously_active: HashSet<String>,
+}
+
+pub fn launch(cargo_command: Vec<&str>) {
+    let build_args: Vec<_> = cargo_command
+        .iter()
+        .map(|x| x.to_string())
+        .chain(env::args().skip(2))
+        .collect();
+
+    Command::new("cargo").args(build_args).spawn().expect("Failed to run cargo");
+
+    nannou::app(model).update(update).run();
 }
 
 fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
@@ -75,7 +84,7 @@ fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
     }
 }
 
-fn model(_app: &App) -> Model {
+pub fn model(_app: &App) -> Model {
     _app.new_window().event(event).view(view).build().unwrap();
 
     let output = Command::new("cargo")
@@ -86,7 +95,6 @@ fn model(_app: &App) -> Model {
         .output()
         .expect("Cargo tree failed");
 
-    println!("Cargo ran with status: {}", output.status);
     io::stderr().write_all(&output.stderr).unwrap();
 
     assert!(output.status.success());
@@ -105,9 +113,9 @@ fn model(_app: &App) -> Model {
     }
 }
 
-fn update(_app: &App, _model: &mut Model, _update: Update) {
+pub fn update(_app: &App, _model: &mut Model, _update: Update) {
     _model.currently_active = active::get_active();
-    
+
     _model
         .previously_active
         .extend(_model.currently_active.clone());

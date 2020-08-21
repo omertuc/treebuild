@@ -33,7 +33,7 @@ fn parse(raw: String) -> Vec<FlatEntry> {
 
         result.push(FlatEntry {
             depth: idx,
-            name: package.to_string(),
+            name: package.replace("_", "-").to_string(),
         });
     }
     result
