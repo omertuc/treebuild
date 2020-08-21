@@ -3,8 +3,9 @@ use nannou::draw;
 use nannou::prelude::*;
 use std::io::{self, Write};
 use std::process::Command;
-use std::rc::Rc;
+use std::{collections::HashSet, rc::Rc};
 extern crate approx;
+use std::ops::Sub;
 
 pub mod parse_cargo_tree_output;
 use parse_cargo_tree_output::{parse_tree, TreeNode};
@@ -13,7 +14,6 @@ mod drawing;
 use drawing::{draw_tree, DrawCrate, DrawLine, Point};
 
 mod active;
-use active::get_active;
 
 fn main() {
     nannou::app(model).update(update).run();
@@ -21,9 +21,11 @@ fn main() {
 
 struct Model {
     tree: Rc<TreeNode>,
-    active: Vec<String>,
     mouse_last: Point,
     active_tree: Rc<TreeNode>,
+    completed: HashSet<String>,
+    currently_active: HashSet<String>,
+    previously_active: HashSet<String>,
 }
 
 fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
@@ -37,8 +39,12 @@ fn event(_app: &App, _model: &mut Model, event: WindowEvent) {
         MouseMoved(_pos) => _model.mouse_last = (_pos.x, _pos.y),
         MousePressed(_button) => {}
         MouseReleased(_button) => {
-            let (draw_crates, _draw_lines) =
-                draw_tree_defaults(Rc::clone(&_model.active_tree), _app.time, vec![]);
+            let (draw_crates, _draw_lines) = draw_tree_defaults(
+                Rc::clone(&_model.active_tree),
+                _app.time,
+                &HashSet::new(),
+                &HashSet::new(),
+            );
 
             for draw_crate in draw_crates {
                 let (x1, y1) = _model.mouse_last;
@@ -91,18 +97,28 @@ fn model(_app: &App) -> Model {
 
     Model {
         tree: Rc::clone(&parsed_tree),
-        active: Vec::<_>::new(),
         mouse_last: (0.0, 0.0),
         active_tree: Rc::clone(&parsed_tree),
+        completed: HashSet::<_>::new(),
+        currently_active: HashSet::<_>::new(),
+        previously_active: HashSet::<_>::new(),
     }
 }
 
-fn update(_app: &App, _model: &mut Model, _update: Update) {}
+fn update(_app: &App, _model: &mut Model, _update: Update) {
+    _model.currently_active = active::get_active();
+    
+    _model
+        .previously_active
+        .extend(_model.currently_active.clone());
+    _model.completed = _model.previously_active.sub(&_model.currently_active);
+}
 
 fn draw_tree_defaults(
     tree: Rc<TreeNode>,
     time: app::DrawScalar,
-    active: Vec<String>,
+    completed: &HashSet<String>,
+    active: &HashSet<String>,
 ) -> (Vec<DrawCrate>, Vec<DrawLine>) {
     draw_tree(
         (0.0, 0.0),
@@ -113,14 +129,19 @@ fn draw_tree_defaults(
         2.0 * PI,
         time.sin() * 0.1,
         (200, 100, 130),
+        &completed,
         &active,
     )
 }
 
-fn draw_dep(time: app::DrawScalar, draw: &draw::Draw, tree: Rc<TreeNode>) {
-    let active = active::get_active();
-
-    let (tree_crates, tree_lines) = draw_tree_defaults(tree, time, active);
+fn draw_dep(
+    completed: &HashSet<String>,
+    active: &HashSet<String>,
+    time: app::DrawScalar,
+    draw: &draw::Draw,
+    tree: Rc<TreeNode>,
+) {
+    let (tree_crates, tree_lines) = draw_tree_defaults(tree, time, &completed, &active);
 
     for draw_line in tree_lines {
         draw.line()
@@ -160,18 +181,13 @@ fn view(_app: &App, _model: &Model, frame: Frame) {
 
     draw.background().color(BLACK);
 
-    // let centers = [
-    //     (500.0, 500.0),
-    //     (-500.0, 500.0),
-    //     (500.0, -500.0),
-    //     (-500.0, -500.0),
-    // ];
-
-    // for (child, &center) in _model.tree.children.iter().zip(centers.iter()) {
-    //     draw_dep(center, _app.time, &draw, child)
-    // }
-
-    draw_dep(_app.time, &draw, Rc::clone(&_model.active_tree));
+    draw_dep(
+        &_model.completed,
+        &_model.currently_active,
+        _app.time,
+        &draw,
+        Rc::clone(&_model.active_tree),
+    );
 
     draw.to_frame(_app, &frame).unwrap();
 }

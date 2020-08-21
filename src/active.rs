@@ -1,6 +1,6 @@
-use std::process::Command;
+use std::{collections::HashSet, process::Command};
 
-pub fn get_children(parent: usize) -> Vec<String> {
+pub fn get_children(parent: usize) -> HashSet<String> {
     let output = Command::new("pgrep")
         .arg("--list-full")
         .arg("--parent")
@@ -8,10 +8,9 @@ pub fn get_children(parent: usize) -> Vec<String> {
         .output()
         .expect("Failed to execute pgrep");
 
-    let mut crates = Vec::<String>::new();
+    let mut crates = HashSet::<String>::new();
     if output.status.success() {
         let output_str = String::from_utf8_lossy(&output.stdout);
-
         for line in output_str.lines() {
             let mut fields_iter = line.split_whitespace();
             for field in &mut fields_iter {
@@ -21,28 +20,35 @@ pub fn get_children(parent: usize) -> Vec<String> {
             }
 
             if let Some(crate_name) = fields_iter.next() {
-                crates.push(crate_name.to_owned());
+                crates.insert(crate_name.to_owned());
             }
         }
     } else {
-        println!("Failed to pgrep ")
+        println!("Failed to pgrep on cargo children")
     }
 
     crates
 }
 
-pub fn get_active() -> Vec<String> {
+pub fn get_active() -> HashSet<String> {
     let output = Command::new("pgrep")
         .arg("cargo")
+        .arg("--exact")
         .output()
         .expect("Failed to execute pgrep");
 
     if output.status.success() {
         let output_str = String::from_utf8_lossy(&output.stdout);
+        let trimmed = output_str.trim();
 
-        if let Ok(pid) = output_str.trim().parse::<usize>() {
+        if let Ok(pid) = trimmed.parse::<usize>() {
             return get_children(pid);
+        } else {
+            println!("Failed to get cargo pid from pgrep output {}", trimmed);
         }
+    } else {
+        println!("Failed to execute pgrep on cargo");
     }
-    Vec::<_>::new()
+
+    HashSet::<_>::new()
 }

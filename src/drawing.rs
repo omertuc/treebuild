@@ -1,9 +1,8 @@
 use crate::parse_cargo_tree_output::TreeNode;
-use std::rc::Rc;
+use std::{collections::HashSet, rc::Rc};
 
 pub type Point = (f32, f32);
 pub type Color = (u8, u8, u8);
-
 fn get_satellites(
     center: Point,
     root_radius: f32,
@@ -68,26 +67,23 @@ pub fn draw_tree(
     sky: f32,
     phase_accum: f32,
     color: Color,
-    active: &Vec<String>
+    completed: &HashSet<String>,
+    active: &HashSet<String>,
 ) -> (Vec<DrawCrate>, Vec<DrawLine>) {
     let mut crate_draws = Vec::<DrawCrate>::new();
     let mut line_draws = Vec::<DrawLine>::new();
 
     // Draw a red outline if active
-    if active.contains(&tree.name) {
-        crate_draws.push(DrawCrate {
-            center: center,
-            radius: radius * 1.10,
-            color: (255, 0, 0),
-            name: "".to_string(),
-            tree: Rc::clone(&tree),
-        });
-    }
-
     crate_draws.push(DrawCrate {
-        center: center,
-        radius: radius,
-        color: color,
+        center,
+        radius,
+        color: if active.contains(&tree.name) {
+            (255, 0, 0)
+        } else if completed.contains(&tree.name) {
+            (150, 150, 150)
+        } else {
+            color
+        },
         name: tree.name.clone(),
         tree: Rc::clone(&tree),
     });
@@ -132,7 +128,8 @@ pub fn draw_tree(
                 child_sky,
                 phase_accum,
                 child.color,
-                &active
+                &completed,
+                &active,
             );
 
             // Make sure the line starts from the circle and not from the center
