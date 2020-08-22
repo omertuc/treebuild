@@ -30,6 +30,8 @@ pub fn get_children(parent: usize) -> HashSet<String> {
 pub fn get_active() -> HashSet<String> {
     let output = Command::new("pgrep")
         .arg("cargo")
+        .arg("--parent")
+        .arg(std::process::id().to_string())
         .arg("--exact")
         .output()
         .expect("Failed to execute pgrep");

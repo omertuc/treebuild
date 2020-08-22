@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use md5;
 use std::rc::Rc;
 use crate::drawing::Color;
 
@@ -49,7 +48,7 @@ fn tree(flat: Vec<FlatEntry>) -> Rc<TreeNode> {
 
     Rc::<_>::new(TreeNode {
         color: (digest[0], digest[1], digest[2]),
-        name: name,
+        name,
         children: candidates
             .iter()
             .take_while(|child| child.depth > root.depth)

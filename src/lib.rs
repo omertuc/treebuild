@@ -2,17 +2,24 @@ use nannou::app;
 use nannou::draw;
 use nannou::prelude::*;
 use std::env;
+use std::io::BufRead;
 use std::io::{self, Write};
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::sync::Mutex;
 use std::{collections::HashSet, rc::Rc};
 extern crate approx;
-use std::ops::Sub;
+use itertools::Itertools;
+use std::{ops::Sub, sync::mpsc::channel, thread};
 
 pub mod parse_cargo_tree_output;
 use parse_cargo_tree_output::{parse_tree, TreeNode};
 
 mod drawing;
 use drawing::{draw_tree, DrawCrate, DrawLine, Point};
+use io::BufReader;
+
+#[macro_use]
+extern crate lazy_static;
 
 mod active;
 
@@ -21,18 +28,59 @@ pub struct Model {
     mouse_last: Point,
     active_tree: Rc<TreeNode>,
     completed: HashSet<String>,
-    currently_active: HashSet<String>,
-    previously_active: HashSet<String>,
+    receiver: std::sync::mpsc::Receiver<String>,
 }
 
-pub fn launch(cargo_command: Vec<&str>) {
-    let build_args: Vec<_> = cargo_command
-        .iter()
-        .map(|x| x.to_string())
-        .chain(env::args().skip(2))
-        .collect();
+lazy_static! {
+    static ref COMPLETED_RECEIVER: Mutex<Option<std::sync::mpsc::Receiver<String>>> =
+        Mutex::new(None);
+}
 
-    Command::new("cargo").args(build_args).spawn().expect("Failed to run cargo");
+pub fn launch(cargo_command: Vec<&'static str>) {
+    let sender = {
+        let (sender, receiver) = channel();
+
+        *COMPLETED_RECEIVER.lock().unwrap() = Some(receiver);
+
+        sender
+    };
+
+    thread::spawn(move || {
+        let build_args: Vec<_> = cargo_command
+            .iter()
+            .map(|x| x.to_string())
+            .chain(env::args().skip(2))
+            .collect();
+
+        let mut cargo_proc = Command::new("cargo")
+            .args(build_args)
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("Failed to run cargo");
+
+        if let Some(ref mut stderr) = cargo_proc.stderr {
+            let lines = BufReader::new(stderr).lines();
+
+            let mut last_line: Option<String> = None;
+
+            for line in lines {
+                if let Some(last_line) = last_line {
+                    // TODO: Let other task know of completed_crate
+                    let completed_crate = last_line
+                        .trim()
+                        .split(' ')
+                        .skip(1)
+                        .take(1)
+                        .join(" ")
+                        .replace("_", "-");
+
+                    sender.send(completed_crate).expect("Can't seem to send to channel");
+                }
+
+                last_line = Some(line.unwrap());
+            }
+        }
+    });
 
     nannou::app(model).update(update).run();
 }
@@ -89,6 +137,7 @@ pub fn model(_app: &App) -> Model {
 
     let output = Command::new("cargo")
         .arg("tree")
+        .arg("-e=no-dev")
         .arg("--prefix")
         .arg("depth")
         .arg("--no-dedupe")
@@ -98,7 +147,6 @@ pub fn model(_app: &App) -> Model {
     io::stderr().write_all(&output.stderr).unwrap();
 
     assert!(output.status.success());
-
     let out = String::from_utf8_lossy(&output.stdout).to_string();
 
     let parsed_tree = &parse_tree(out);
@@ -108,18 +156,14 @@ pub fn model(_app: &App) -> Model {
         mouse_last: (0.0, 0.0),
         active_tree: Rc::clone(&parsed_tree),
         completed: HashSet::<_>::new(),
-        currently_active: HashSet::<_>::new(),
-        previously_active: HashSet::<_>::new(),
+        receiver: COMPLETED_RECEIVER.lock().unwrap().take().unwrap(),
     }
 }
 
 pub fn update(_app: &App, _model: &mut Model, _update: Update) {
-    _model.currently_active = active::get_active();
-
-    _model
-        .previously_active
-        .extend(_model.currently_active.clone());
-    _model.completed = _model.previously_active.sub(&_model.currently_active);
+    if let Ok(completed_crate) = _model.receiver.try_recv() {
+        _model.completed.insert(completed_crate);
+    }
 }
 
 fn draw_tree_defaults(
@@ -128,6 +172,8 @@ fn draw_tree_defaults(
     completed: &HashSet<String>,
     active: &HashSet<String>,
 ) -> (Vec<DrawCrate>, Vec<DrawLine>) {
+    let transition = time.sin().abs(); 
+    
     draw_tree(
         (0.0, 0.0),
         tree,
@@ -139,6 +185,7 @@ fn draw_tree_defaults(
         (200, 100, 130),
         &completed,
         &active,
+        transition
     )
 }
 
@@ -189,9 +236,12 @@ fn view(_app: &App, _model: &Model, frame: Frame) {
 
     draw.background().color(BLACK);
 
+    let active_crates = active::get_active();
+    let actually_completed = _model.completed.sub(&active_crates);
+
     draw_dep(
-        &_model.completed,
-        &_model.currently_active,
+        &actually_completed,
+        &active::get_active(),
         _app.time,
         &draw,
         Rc::clone(&_model.active_tree),

@@ -1,5 +1,5 @@
 use crate::parse_cargo_tree_output::TreeNode;
-use std::{collections::HashSet, rc::Rc};
+use std::{cmp, collections::HashSet, rc::Rc};
 
 pub type Point = (f32, f32);
 pub type Color = (u8, u8, u8);
@@ -69,6 +69,7 @@ pub fn draw_tree(
     color: Color,
     completed: &HashSet<String>,
     active: &HashSet<String>,
+    transition: f32,
 ) -> (Vec<DrawCrate>, Vec<DrawLine>) {
     let mut crate_draws = Vec::<DrawCrate>::new();
     let mut line_draws = Vec::<DrawLine>::new();
@@ -78,9 +79,23 @@ pub fn draw_tree(
         center,
         radius,
         color: if active.contains(&tree.name) {
-            (255, 0, 0)
+            let active_color = (0x98, 0xfb, 0x98);
+
+            let base_r = cmp::min(color.0, active_color.0);
+            let base_g = cmp::min(color.1, active_color.1);
+            let base_b = cmp::min(color.2, active_color.2);
+
+            let diff_r = cmp::max(color.0, active_color.0) - base_r;
+            let diff_g = cmp::max(color.1, active_color.1) - base_g;
+            let diff_b = cmp::max(color.2, active_color.2) - base_b;
+
+            (
+                base_r.saturating_add((diff_r as f32 * transition) as u8),
+                base_g.saturating_add((diff_g as f32 * transition) as u8),
+                base_b.saturating_add((diff_b as f32 * transition) as u8),
+            )
         } else if completed.contains(&tree.name) {
-            (150, 150, 150)
+            (0x98, 0xfb, 0x98)
         } else {
             color
         },
@@ -130,6 +145,7 @@ pub fn draw_tree(
                 child.color,
                 &completed,
                 &active,
+                transition,
             );
 
             // Make sure the line starts from the circle and not from the center
