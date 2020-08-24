@@ -1,173 +1,262 @@
-use crate::parse_cargo_tree_output::TreeNode;
-use std::{cmp, collections::HashSet, rc::Rc};
+use crate::dependency_tree::{Dependency, DependencyIterator};
+use crc::crc32;
+use nannou::draw;
+use nannou::prelude::*;
+use std::collections::HashSet;
 
-pub type Point = (f32, f32);
-pub type Color = (u8, u8, u8);
-fn get_satellites(
+pub type Phase = f32;
+pub type Transition = f32;
+pub type Color = Rgb<u8>;
+
+#[derive(Copy, Clone)]
+pub struct Point(pub f32, pub f32);
+
+const COMPLETED_TASK_COLOR: (u8, u8, u8) = (0x98, 0xfb, 0x98);
+
+enum DrawStage {
+    Line {
+        p1: Point,
+        p2: Point,
+    },
+    Crate {
+        center: Point,
+        radius: f32,
+        color: Color,
+        name: String,
+    },
+}
+
+struct DrawLevel<'a> {
     center: Point,
-    root_radius: f32,
-    in_radius: f32,
-    amount: usize,
-    phase: f32,
-    sky: f32,
-) -> (f32, Vec<(Point, f32)>) {
-    let diff_angle = sky / (amount as f32);
-
-    (
-        if diff_angle > std::f32::consts::PI {
-            root_radius * 0.7
-        } else {
-            f32::min(
-                in_radius * (2.0f32.sqrt()) * (1.0 - diff_angle.cos()).sqrt() / 2.0,
-                root_radius * 0.7,
-            )
-        },
-        (0u32..(amount as u32))
-            // 0 1 2 3 5 6 7 ... to 0 1 1 2 2 3 3 ...
-            .map(|idx| ((idx as f32) / 2.0).ceil())
-            // Alternate sign
-            .zip([1, -1].iter().cycle())
-            .map(|(idx, &sign)| idx * (sign as f32))
-            // Get final angle for this satellite
-            .map(|alternating_idx| phase + alternating_idx * diff_angle)
-            // Get final cartesian coordinates of this satellite, also append angle
-            .map(|angle: f32| {
-                (
-                    (
-                        center.0 + angle.cos() * in_radius,
-                        center.1 + angle.sin() * in_radius,
-                    ),
-                    angle,
-                )
-            })
-            .collect::<Vec<_>>(),
-    )
-}
-
-pub struct DrawCrate {
-    pub center: Point,
-    pub radius: f32,
-    pub color: Color,
-    pub name: String,
-    pub tree: Rc<TreeNode>,
-}
-
-pub struct DrawLine {
-    pub p1: Point,
-    pub p2: Point,
-    pub color: Color,
-}
-
-pub fn draw_tree(
-    center: Point,
-    tree: Rc<TreeNode>,
     radius: f32,
-    phase: f32,
-    depth: usize,
-    sky: f32,
-    phase_accum: f32,
-    color: Color,
-    completed: &HashSet<String>,
-    active: &HashSet<String>,
-    transition: f32,
-) -> (Vec<DrawCrate>, Vec<DrawLine>) {
-    let mut crate_draws = Vec::<DrawCrate>::new();
-    let mut line_draws = Vec::<DrawLine>::new();
+    iter: DependencyIterator<'a>,
+}
 
-    // Draw a red outline if active
-    crate_draws.push(DrawCrate {
-        center,
-        radius,
-        color: if active.contains(&tree.name) {
-            let active_color = (0x98, 0xfb, 0x98);
+struct DrawingPlan<'a> {
+    stack: Vec<DrawLevel<'a>>,
+    angle: f32,
+    phase_accum: Phase,
+}
 
-            let base_r = cmp::min(color.0, active_color.0);
-            let base_g = cmp::min(color.1, active_color.1);
-            let base_b = cmp::min(color.2, active_color.2);
+impl<'a> DrawingPlan<'a> {
+    fn new(root: Dependency<'a>, phase_accum: Phase) -> DrawingPlan<'a> {
+        let root = DrawLevel {
+            center: Point(0.0, 0.0),
+            radius: 150.0,
+            iter: root.into_iter(),
+        };
 
-            let diff_r = cmp::max(color.0, active_color.0) - base_r;
-            let diff_g = cmp::max(color.1, active_color.1) - base_g;
-            let diff_b = cmp::max(color.2, active_color.2) - base_b;
+        DrawingPlan {
+            stack: vec![root],
+            angle: 1.0,
+            phase_accum,
+        }
+    }
+}
 
-            (
-                base_r.saturating_add((diff_r as f32 * transition) as u8),
-                base_g.saturating_add((diff_g as f32 * transition) as u8),
-                base_b.saturating_add((diff_b as f32 * transition) as u8),
-            )
-        } else if completed.contains(&tree.name) {
-            (0x98, 0xfb, 0x98)
+impl<'a> Iterator for DrawingPlan<'a> {
+    type Item = DrawStage;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(mut level) = self.stack.pop() {
+            let children_count = level.iter.len();
+            let parent_sky = calc_sky(self.stack.len(), children_count);
+            let diff_angle = parent_sky / (children_count as f32);
+
+            if let Some(child) = level.iter.next() {
+                // Going down, return a line
+                let idx = level.iter.index().unwrap();
+                let base_angle = if idx == 0 {
+                    self.angle
+                } else {
+                    self.angle - calc_phase_change(idx - 1, diff_angle)
+                };
+                let child_angle =
+                    base_angle + calc_phase_change(idx, diff_angle) + self.phase_accum;
+                let child_radius = calc_child_radius(level.radius, diff_angle);
+                let child_center = calc_child_center(
+                    level.center,
+                    level.radius,
+                    child_radius,
+                    child_angle,
+                    child.children_count(),
+                );
+
+                let draw_line = DrawStage::Line {
+                    p1: Point(
+                        level.center.0 + child_angle.cos() * level.radius,
+                        level.center.1 + child_angle.sin() * level.radius,
+                    ),
+                    p2: Point(
+                        child_center.0 - child_angle.cos() * child_radius,
+                        child_center.1 - child_angle.sin() * child_radius,
+                    ),
+                };
+
+                self.angle = child_angle;
+                self.stack.push(level);
+                self.stack.push(DrawLevel {
+                    center: child_center,
+                    radius: child_radius,
+                    iter: child.into_iter(),
+                });
+
+                Some(draw_line)
+            } else {
+                // Going up, return a crate
+                let name = level.iter.name().to_string();
+                let crc = crc32::checksum_ieee(name.as_bytes());
+
+                let base_angle = if children_count == 0 {
+                    self.angle
+                } else {
+                    self.angle - calc_phase_change(children_count - 1, diff_angle)
+                };
+                self.angle = base_angle - self.phase_accum;
+
+                Some(DrawStage::Crate {
+                    center: level.center,
+                    radius: level.radius,
+                    color: Color::new(crc as u8, (crc >> 8) as u8, (crc >> 16) as u8),
+                    name,
+                })
+            }
         } else {
-            color
-        },
-        name: tree.name.clone(),
-        tree: Rc::clone(&tree),
-    });
+            None
+        }
+    }
+}
 
-    let child_count = tree.children.len();
+fn calc_phase_change(idx: usize, diff_angle: f32) -> f32 {
+    let sign = if idx % 2 == 1 { -1f32 } else { 1f32 };
+    ((idx as f32) / 2.0).ceil() * diff_angle * sign
+}
 
-    let (new_radius, sats) = get_satellites(
-        (center.0, center.1),
-        radius,
-        radius * 2.0,
-        child_count,
-        phase + phase_accum,
-        sky,
+fn calc_sky(depth: usize, children_count: usize) -> f32 {
+    if depth == 0 {
+        PI * 2.0
+    } else if children_count < 5 {
+        PI / 2.0
+    } else {
+        PI * 1.5
+    }
+}
+
+fn calc_child_radius(radius: f32, diff_angle: f32) -> f32 {
+    if diff_angle > std::f32::consts::PI {
+        radius * 0.7
+    } else {
+        f32::min(
+            radius * 2.0 * (2.0f32.sqrt()) * (1.0 - diff_angle.cos()).sqrt() / 2.0,
+            radius * 0.7,
+        )
+    }
+}
+
+fn calc_child_center(
+    parent_center: Point,
+    parent_radius: f32,
+    radius: f32,
+    angle: f32,
+    children: usize,
+) -> Point {
+    let point = Point(
+        parent_center.0 + angle.cos() * parent_radius,
+        parent_center.1 + angle.sin() * parent_radius,
     );
 
-    sats.into_iter()
-        .zip(tree.children.iter())
-        .for_each(|((point, point_phase), child)| {
-            let child_center = if child.children.len() < 5 {
-                point
-            } else {
-                (
-                    point.0 + new_radius * point_phase.cos() * 1.5,
-                    point.1 + new_radius * point_phase.sin() * 1.5,
-                )
-            };
+    if children < 5 {
+        point
+    } else {
+        Point(
+            point.0 + radius * angle.cos() * 1.5,
+            point.1 + radius * angle.sin() * 1.5,
+        )
+    }
+}
 
-            let child_sky = {
-                if Rc::clone(&child).children.len() < 5 {
-                    std::f32::consts::PI / 2.0
+pub fn find_dep_by_pos<'a>(
+    active: Dependency<'a>,
+    Point(x1, y1): Point,
+    phase: Phase,
+) -> Option<String> {
+    for draw_crate in DrawingPlan::new(active, phase) {
+        if let DrawStage::Crate {
+            center,
+            radius,
+            name,
+            ..
+        } = draw_crate
+        {
+            let Point(x2, y2) = center;
+
+            if (x2 - x1).powf(2.0) + (y2 - y1).powf(2.0) < radius.powf(2.0) {
+                return Some(name.to_string());
+            }
+        }
+    }
+
+    None
+}
+
+pub fn draw_deps<'a>(
+    draw: &draw::Draw,
+    phase: Phase,
+    transition: Transition,
+    root: Dependency<'a>,
+    completed_tasks: &HashSet<String>,
+    active_tasks: &HashSet<String>,
+) {
+    for stage in DrawingPlan::new(root, phase) {
+        match stage {
+            DrawStage::Line { p1, p2 } => {
+                draw.line()
+                    .start(pt2(p1.0, p1.1))
+                    .end(pt2(p2.0, p2.1))
+                    .weight(2.0)
+                    .color(srgba(255u8, 255, 255, 127));
+            }
+            DrawStage::Crate {
+                center,
+                radius,
+                color,
+                name,
+            } => {
+                let color = if completed_tasks.contains(&name) {
+                    COMPLETED_TASK_COLOR.into()
+                } else if active_tasks.contains(&name) {
+                    color_transition(color, COMPLETED_TASK_COLOR.into(), transition)
                 } else {
-                    std::f32::consts::PI * 1.5
+                    color
+                };
+
+                draw.ellipse()
+                    .color(srgba(color.red, color.green, color.blue, 127))
+                    .x_y(center.0, center.1)
+                    .w_h(radius * 2.0, radius * 2.0);
+
+                if radius > 5.0 {
+                    draw.text(&name)
+                        .color(WHITE)
+                        .x_y(center.0, center.1)
+                        .w_h(200.0, 200.0);
                 }
-            };
+            }
+        }
+    }
+}
 
-            let (child_crate_draws, child_line_draws) = draw_tree(
-                child_center,
-                Rc::clone(&child),
-                new_radius,
-                point_phase,
-                depth + 1,
-                child_sky,
-                phase_accum,
-                child.color,
-                &completed,
-                &active,
-                transition,
-            );
+fn color_transition(a: Color, b: Color, transition: Transition) -> Color {
+    let (r1, g1, b1) = a.into_components();
+    let (r2, g2, b2) = b.into_components();
 
-            // Make sure the line starts from the circle and not from the center
-            let line_start = (
-                center.0 + point_phase.cos() * radius,
-                center.1 + point_phase.sin() * radius,
-            );
+    let base_r = ((1.0 - transition) * (r1 as f32)) as u8;
+    let base_g = ((1.0 - transition) * (g1 as f32)) as u8;
+    let base_b = ((1.0 - transition) * (b1 as f32)) as u8;
 
-            let line_end = (
-                child_center.0 - (point_phase).cos() * new_radius,
-                child_center.1 - (point_phase).sin() * new_radius,
-            );
-
-            line_draws.push(DrawLine {
-                p1: line_start,
-                p2: line_end,
-                color: (255, 255, 255),
-            });
-
-            crate_draws.extend(child_crate_draws);
-            line_draws.extend(child_line_draws);
-        });
-
-    (crate_draws, line_draws)
+    Rgb::new(
+        base_r.saturating_add((transition * (r2 as f32)) as u8),
+        base_g.saturating_add((transition * (g2 as f32)) as u8),
+        base_b.saturating_add((transition * (b2 as f32)) as u8),
+    )
 }
