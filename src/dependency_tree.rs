@@ -16,6 +16,7 @@ impl DependencyTree {
     pub fn new(path: &Path) -> DependencyTree {
         let output = Command::new("cargo")
             .arg("tree")
+            .arg("-e=no-dev")
             .arg("--prefix")
             .arg("depth")
             .arg("--no-dedupe")
@@ -37,6 +38,10 @@ impl DependencyTree {
 
             while depth < stack.len() {
                 stack.pop();
+            }
+
+            if stack.contains(&dep) {
+                continue;
             }
 
             map.entry(dep.clone()).or_insert_with(|| TreeNode {

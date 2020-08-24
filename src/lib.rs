@@ -25,12 +25,13 @@ enum CargoTask {
 }
 
 lazy_static! {
-    static ref COMPLETED_RECEIVER: Mutex<Option<(JoinHandle<()>, Receiver<CargoTask>)>> =
+    static ref COMPLETED_RECEIVER: Mutex<Option<(JoinHandle<()>, Receiver<CargoTask>, DependencyTree)>> =
         Mutex::new(None);
 }
 
 pub fn launch(cargo_command: Vec<&'static str>, prefix: &'static str) {
     let (sender, receiver) = channel();
+    let parsed_tree = DependencyTree::new(Path::new("."));
 
     let thread = thread::spawn(move || {
         let build_args: Vec<_> = cargo_command
@@ -102,7 +103,7 @@ pub fn launch(cargo_command: Vec<&'static str>, prefix: &'static str) {
     COMPLETED_RECEIVER
         .lock()
         .expect("Failed to take the receiver lock")
-        .replace((thread, receiver));
+        .replace((thread, receiver, parsed_tree));
 
     nannou::app(model).update(update).run();
 }
@@ -129,9 +130,11 @@ impl Model {
 fn model(app: &App) -> Model {
     app.new_window().event(event).view(view).build().unwrap();
 
-    let parsed_tree = DependencyTree::new(Path::new("."));
-
-    let (sender_thread, tasks_receiver) = COMPLETED_RECEIVER.lock().unwrap().take().unwrap();
+    let (sender_thread, tasks_receiver, parsed_tree) = COMPLETED_RECEIVER
+        .lock()
+        .expect("Failed to take receiver lock")
+        .take()
+        .expect("Failed to unpack initial state");
 
     Model {
         tree: parsed_tree,
