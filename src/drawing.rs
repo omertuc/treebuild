@@ -161,8 +161,8 @@ fn calc_child_center(
     children: usize,
 ) -> Point {
     let point = Point(
-        parent_center.0 + angle.cos() * parent_radius,
-        parent_center.1 + angle.sin() * parent_radius,
+        parent_center.0 + angle.cos() * parent_radius * 2.0,
+        parent_center.1 + angle.sin() * parent_radius * 2.0,
     );
 
     if children < 5 {
