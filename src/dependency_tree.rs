@@ -2,7 +2,7 @@ use std::collections::{hash_set, HashMap, HashSet};
 use std::path::Path;
 use std::process::Command;
 
-pub struct DependencyTree {
+pub(crate) struct DependencyTree {
     root: String,
     nodes: HashMap<String, TreeNode>,
 }
@@ -155,7 +155,7 @@ impl<'a> Iterator for DependencyIterator<'a> {
     }
 }
 
-pub fn crate_name_from_package_id(pkg_id: &str) -> String {
+pub(crate) fn crate_name_from_package_id(pkg_id: &str) -> String {
     let stop = pkg_id.find(" (").unwrap_or(pkg_id.len());
     let split = pkg_id[..stop].trim().rsplitn(2, " ").collect::<Vec<_>>();
     let start = if split[0].starts_with("v") { 1 } else { 0 };

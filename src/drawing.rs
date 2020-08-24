@@ -175,7 +175,7 @@ fn calc_child_center(
     }
 }
 
-pub fn find_dep_by_pos<'a>(
+pub(crate) fn find_dep_by_pos<'a>(
     active: Dependency<'a>,
     Point(x1, y1): Point,
     phase: Phase,
@@ -199,7 +199,7 @@ pub fn find_dep_by_pos<'a>(
     None
 }
 
-pub fn draw_deps<'a>(
+pub(crate) fn draw_deps<'a>(
     draw: &draw::Draw,
     phase: Phase,
     transition: Transition,
